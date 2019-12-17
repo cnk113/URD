@@ -78,16 +78,21 @@ importDM <- function(object, dm, cell.names=NULL) {
 #' object <- calcDM(object, knn = 200, sigma.use = 8)
 #' 
 #' @export
-calcDM <- function(object, genes.use=object@var.genes, cells.use=NULL, knn=NULL, sigma.use=NULL, n_local=5:7, distance=c("euclidean", "cosine", "rankcor"), density.norm=T, dcs.store=200, verbose=T) {
+calcDM <- function(object, genes.use=object@var.genes, reduced=NULL, cells.use=NULL, knn=NULL, sigma.use=NULL, n_local=5:7, distance=c("euclidean", "cosine", "rankcor"), density.norm=T, dcs.store=200, verbose=T) {
   
   # Subset the data and convert to a matrix without row or column names because they crash destiny.
-  if (is.null(genes.use) || length(genes.use) == 0) genes.use <- rownames(object@logupx.data)
-  if (is.null(cells.use)) cells.use <- colnames(object@logupx.data)
-  data.use <- t(object@logupx.data[genes.use, cells.use])
-  rownames(data.use) <- NULL
-  colnames(data.use) <- NULL
-  data.use <- as.matrix(data.use)
-  
+  if (!is.null(reduced)){
+    reduced <- reduced[colnames(object@logupx.data),]
+    cells.use <- rownames(reduced)
+    data.use <- reduced
+  } else {
+    if (is.null(genes.use) || length(genes.use) == 0) genes.use <- rownames(object@logupx.data)
+    if (is.null(cells.use)) cells.use <- colnames(object@logupx.data)
+    data.use <- t(object@logupx.data[genes.use, cells.use])
+    rownames(data.use) <- NULL
+    colnames(data.use) <- NULL
+    data.use <- as.matrix(data.use)
+  }
   # Figure out sigma
   if (is.null(sigma.use)) {
     sigma.use <- find_sigmas(data.use, steps=25, verbose=F)@optimal_sigma
